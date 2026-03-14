@@ -24,6 +24,7 @@ import {
   BookingStatus,
   useCallerBookings,
   useCallerMembership,
+  useCallerProfile,
   usePurchaseMembership,
 } from "../hooks/useQueries";
 
@@ -101,6 +102,7 @@ export function DashboardPage() {
     useCallerBookings();
   const { data: membership, isLoading: membershipLoading } =
     useCallerMembership();
+  const { data: profile } = useCallerProfile();
   const purchaseMembership = usePurchaseMembership();
   const { identity } = useInternetIdentity();
 
@@ -130,7 +132,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="font-display font-bold text-3xl text-foreground">
-                My Dashboard
+                {profile?.name ? `Hi, ${profile.name}` : "My Dashboard"}
               </h1>
               <p className="text-muted-foreground text-sm mt-1">
                 {identity?.getPrincipal().toString().slice(0, 16)}...

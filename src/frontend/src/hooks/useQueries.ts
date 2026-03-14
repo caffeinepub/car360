@@ -102,13 +102,14 @@ export function useCallerRole() {
 
 export function useCallerProfile() {
   const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
   return useQuery<UserProfile | null>({
-    queryKey: ["callerProfile"],
+    queryKey: ["callerProfile", identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor) return null;
       return actor.getCallerUserProfile();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && !!identity,
   });
 }
 
@@ -152,6 +153,20 @@ export function useBookService() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["callerBookings"] });
       qc.invalidateQueries({ queryKey: ["allBookings"] });
+    },
+  });
+}
+
+export function useSaveProfile() {
+  const { actor } = useActor();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
+      if (!actor) throw new Error("Not connected");
+      return actor.saveCallerUserProfile(profile);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["callerProfile"] });
     },
   });
 }

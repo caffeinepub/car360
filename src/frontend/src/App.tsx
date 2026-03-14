@@ -3,9 +3,10 @@ import { useState } from "react";
 import { BookingModal } from "./components/BookingModal";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
+import { SignUpModal } from "./components/SignUpModal";
 import { useInternetIdentity } from "./hooks/useInternetIdentity";
 import { UserRole, useCallerRole } from "./hooks/useQueries";
-import { useCallerMembership } from "./hooks/useQueries";
+import { useCallerMembership, useCallerProfile } from "./hooks/useQueries";
 import { AdminPage } from "./pages/AdminPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
@@ -19,6 +20,10 @@ export default function App() {
   const { data: role } = useCallerRole();
   const { identity } = useInternetIdentity();
   const { data: membership } = useCallerMembership();
+  const { data: profile, isLoading: profileLoading } = useCallerProfile();
+
+  // Show sign-up modal if logged in but no profile yet
+  const showSignUp = !!identity && !profileLoading && profile === null;
 
   const navigate = (p: string) => {
     if (p === "services") {
@@ -43,10 +48,11 @@ export default function App() {
   };
 
   const handleBookService = () => {
-    if (!identity) {
-      // will show login in modal later; show booking modal (it will handle unauthenticated state)
-    }
     setBookingOpen(true);
+  };
+
+  const handleSignUpComplete = () => {
+    navigate("dashboard");
   };
 
   return (
@@ -69,6 +75,7 @@ export default function App() {
         onClose={() => setBookingOpen(false)}
         membership={membership}
       />
+      <SignUpModal open={showSignUp} onComplete={handleSignUpComplete} />
       <Toaster richColors position="top-right" />
     </div>
   );
