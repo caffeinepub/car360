@@ -8,13 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -27,17 +20,6 @@ import {
   useRedeemCarWash,
 } from "../hooks/useQueries";
 
-const CATEGORIES: { value: ServiceCategory; label: string }[] = [
-  { value: ServiceCategory.wash, label: "Wash & Detailing" },
-  { value: ServiceCategory.tires, label: "Tire Services" },
-  { value: ServiceCategory.oil, label: "Oil & Fluids" },
-  { value: ServiceCategory.brakes, label: "Brakes" },
-  { value: ServiceCategory.ac, label: "AC & Electrical" },
-  { value: ServiceCategory.body, label: "Body & Paint" },
-  { value: ServiceCategory.accessories, label: "Car Accessories" },
-  { value: ServiceCategory.suspension, label: "Suspension & Steering" },
-];
-
 interface BookingModalProps {
   open: boolean;
   onClose: () => void;
@@ -45,16 +27,7 @@ interface BookingModalProps {
   preselectedCategory?: ServiceCategory;
 }
 
-export function BookingModal({
-  open,
-  onClose,
-  membership,
-  preselectedCategory,
-}: BookingModalProps) {
-  const [category, setCategory] = useState<ServiceCategory | "">(
-    preselectedCategory || "",
-  );
-  const [serviceId, setServiceId] = useState("");
+export function BookingModal({ open, onClose, membership }: BookingModalProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [carModel, setCarModel] = useState("");
@@ -65,17 +38,20 @@ export function BookingModal({
   const bookService = useBookService();
   const redeemCarWash = useRedeemCarWash();
 
-  const filteredServices = category
-    ? allServices.filter((s) => s.category === category)
-    : allServices;
   const canRedeem =
     membership?.activated && Number(membership.remainingCarWashes) > 0;
 
+  // Pick the first wash service automatically, or fall back to any first service
+  const defaultService =
+    allServices.find((s) => s.category === ServiceCategory.wash) ||
+    allServices[0];
+
   const handleSubmit = async () => {
-    if (!name || !phone || !carModel || !date || !serviceId) {
+    if (!name || !phone || !carModel || !date) {
       toast.error("Please fill all fields");
       return;
     }
+    const serviceId = defaultService ? String(defaultService.id) : "1";
     const dateMs = BigInt(new Date(date).getTime()) * BigInt(1_000_000);
     try {
       const booking = await bookService.mutateAsync({
@@ -106,48 +82,6 @@ export function BookingModal({
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Category</Label>
-              <Select
-                value={category}
-                onValueChange={(v) => {
-                  setCategory(v as ServiceCategory);
-                  setServiceId("");
-                }}
-              >
-                <SelectTrigger data-ocid="booking.select">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Service</Label>
-              <Select
-                value={serviceId}
-                onValueChange={setServiceId}
-                disabled={filteredServices.length === 0}
-              >
-                <SelectTrigger data-ocid="booking.service.select">
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredServices.map((s) => (
-                    <SelectItem key={String(s.id)} value={String(s.id)}>
-                      {s.name} — ₹{String(s.price)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>Your Name</Label>
