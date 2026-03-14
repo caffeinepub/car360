@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { useState } from "react";
+import { toast } from "sonner";
 import { BookingModal } from "./components/BookingModal";
 import { Footer } from "./components/Footer";
 import { Navbar } from "./components/Navbar";
@@ -18,7 +19,7 @@ export default function App() {
   const [page, setPage] = useState<Page>("home");
   const [bookingOpen, setBookingOpen] = useState(false);
   const { data: role } = useCallerRole();
-  const { identity } = useInternetIdentity();
+  const { identity, login } = useInternetIdentity();
   const { data: membership } = useCallerMembership();
   const { data: profile, isLoading: profileLoading } = useCallerProfile();
 
@@ -48,6 +49,11 @@ export default function App() {
   };
 
   const handleBookService = () => {
+    if (!identity) {
+      toast.info("Please sign in to book a service.");
+      login();
+      return;
+    }
     setBookingOpen(true);
   };
 
